@@ -1,7 +1,10 @@
+# -*- coding: utf-8 -*-
+
 import telegram
 from telegram.ext import Updater, CommandHandler, Filters
 import logging
 import os
+import matplotlib.pyplot as plt
 
 with open("ignore/API_key.txt", "r") as f:
     API_KEY = f.read().rstrip()
