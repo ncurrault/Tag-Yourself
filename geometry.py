@@ -10,6 +10,9 @@ class Point(object):
         self.dim = _dim
         self.data = [ 0 ] * _dim
 
+    def __str__(self):
+        return "{}({})".format(self.label, ", ".join([ str(e) for e in self.data ]) )
+
     def set_dim(self, new_dim):
         if self.dim == new_dim:
             return

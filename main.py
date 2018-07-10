@@ -102,7 +102,7 @@ def tag_handler(bot, update, args=None):
 
         if name is None:
             bot.send_message(chat_id=update.message.chat_id,
-                             text="Error: graph '{}' was not found!".format(name))
+                             text="Error: graph '{}' was not found!".format(args[0]))
         else:
             plot = plots[name]
 
@@ -126,6 +126,10 @@ def tag_handler(bot, update, args=None):
             else:
                 point = geometry.Point(label, plot.dim)
                 point.set_data_arr([ float(s) for s in coords_strs ])
+                plot.add_point(point)
+
+                bot.send_message(chat_id=update.message.chat_id,
+                    text="Successfully added point {}".format(point) )
 
     else:
         bot.send_message(chat_id=update.message.chat_id,
