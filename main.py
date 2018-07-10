@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+
 import telegram
 from telegram.ext import Updater, CommandHandler, Filters
 import logging
@@ -86,7 +88,7 @@ def display_handler(bot, update, args=None):
         image = plots[name].generate_image()
         # TODO spooky image-sending things
         bot.send_message(chat_id=update.message.chat_id,
-            text="TODO: the only useful part of this bot has not been implemented")
+            text=image)
 
 def is_numeric(s):
     try:
@@ -139,7 +141,7 @@ def tag_handler(bot, update, args=None):
 dispatcher.add_handler(CommandHandler('newgraph', newgraph_handler, pass_args=True))
 dispatcher.add_handler(CommandHandler('addaxis', addaxis_handler, pass_args=True))
 dispatcher.add_handler(CommandHandler('listaxes', listaxes_handler, pass_args=True))
-dispatcher.add_handler(CommandHandler('lookatthisgraph', display_handler, pass_args=True))
+dispatcher.add_handler(CommandHandler(['lookatthisgraph', 'latg'], display_handler, pass_args=True))
 dispatcher.add_handler(CommandHandler('tag', tag_handler, pass_args=True))
 
 

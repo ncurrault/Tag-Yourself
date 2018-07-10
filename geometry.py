@@ -1,5 +1,5 @@
+from __future__ import unicode_literals
 import matplotlib.pyplot as plt
-
 
 class DimensionMismatchException(Exception):
     pass
@@ -43,6 +43,22 @@ class Plot(object):
         self.dim = 0
         self.axes = []
         self.points = []
+    def __str__(self):
+        ret = self.title
+        ret += "\n"
+        ret += "=" * len(self.title)
+        ret += "\n"
+
+        ret += ", ".join(self.axes)
+
+        ret += "\n"
+        ret += "=" * len(self.title)
+        ret += "\n"
+        for p in self.points:
+            ret += str(p)
+            ret += "\n"
+
+        return ret
 
     def add_axis(self, axis_name):
         self.dim += 1
@@ -62,8 +78,9 @@ class Plot(object):
             raise DimensionMismatchException()
 
     def generate_image(self):
-        pass
         # TODO: the hard part
+        # This function currently just returns a string representing everything
+        return str(self)
 
 # /lookatthisgraph _name_
 # Display a graph
