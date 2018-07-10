@@ -5,10 +5,16 @@ class DimensionMismatchException(Exception):
     pass
 
 class Point(object):
-    def __init__(self, _label, _dim=0):
-        self.label = _label
-        self.dim = _dim
-        self.data = [ 0 ] * _dim
+    def __init__(self, label, data=None, dim=0):
+        self.label = label
+        self.dim = dim
+        if data is None:
+            self.data = [ 0 ] * dim
+        else:
+            if len(data) == dim:
+                self.data = data
+            else:
+                raise DimensionMismatchException()
 
     def __str__(self):
         return "{}({})".format(self.label, ", ".join([ str(e) for e in self.data ]) )
