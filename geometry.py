@@ -43,7 +43,7 @@ class Plot(object):
 
     def add_axis(self, axis_name):
         self.dim += 1
-        for p in points:
+        for p in self.points:
             p.set_dim(self.dim)
         self.axes.append(axis_name)
 

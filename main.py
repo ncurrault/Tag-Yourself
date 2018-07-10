@@ -25,7 +25,7 @@ for filename in os.listdir(PICKLE_STORAGE_DIRECTORY):
             plots[plot_name] = pickle.load(f)
 
 def get_graph_name(bot, update, args, validate_existence=True):
-    if args is None:
+    if args is None or len(args) == 0:
         return None
     elif validate_existence and args[0] not in plots.keys():
         return None
@@ -40,6 +40,8 @@ def newgraph_handler(bot, update, args=None):
                          text="Error: syntax is /newgraph [NAME]")
     else:
         plots[name] = geometry.Plot(name)
+        bot.send_message(chat_id=update.message.chat_id,
+                         text="Success! Created new '{}' plot".format(name))
 
 def addaxis_handler(bot, update, args=None):
     if args and len(args) >= 2:
@@ -49,7 +51,7 @@ def addaxis_handler(bot, update, args=None):
             bot.send_message(chat_id=update.message.chat_id,
                              text="Error: graph '{}' was not found!".format(name))
         else:
-            label = args[1:]
+            label = " ".join(args[1:])
 
             plots[name].add_axis(label)
             bot.send_message(chat_id=update.message.chat_id,
@@ -131,7 +133,7 @@ def tag_handler(bot, update, args=None):
 
 
 dispatcher.add_handler(CommandHandler('newgraph', newgraph_handler, pass_args=True))
-dispatcher.add_handler(CommandHandler('addaxis', newgraph_handler, pass_args=True))
+dispatcher.add_handler(CommandHandler('addaxis', addaxis_handler, pass_args=True))
 dispatcher.add_handler(CommandHandler('listaxes', listaxes_handler, pass_args=True))
 dispatcher.add_handler(CommandHandler('lookatthisgraph', display_handler, pass_args=True))
 dispatcher.add_handler(CommandHandler('tag', tag_handler, pass_args=True))
