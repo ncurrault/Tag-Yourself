@@ -4,7 +4,7 @@ import telegram
 from telegram.ext import Updater, CommandHandler, Filters
 import logging
 import os
-import matplotlib.pyplot as plt
+import geometry
 
 with open("ignore/API_key.txt", "r") as f:
     API_KEY = f.read().rstrip()
@@ -24,12 +24,118 @@ for filename in os.listdir(PICKLE_STORAGE_DIRECTORY):
         with open(os.path.join(PICKLE_STORAGE_DIRECTORY, filename), "r") as f:
             plots[plot_name] = pickle.load(f)
 
-# TODO: actual handlers for
-#   /newgraph name
-#   /addaxis name label
-#   /listaxes name
-#   /lookatthisgraph name
+def get_graph_name(bot, update, args, validate_existence=True):
+    if args is None:
+        return None
+    elif validate_existence and args[0] not in plots.keys():
+        return None
+    else:
+        return args[0]
+
+def newgraph_handler(bot, update, args=None):
+    name = get_graph_name(bot, update, args, validate_existence=False)
+
+    if name is None:
+        bot.send_message(chat_id=update.message.chat_id,
+                         text="Error: syntax is /newgraph [NAME]")
+    else:
+        plots[name] = geometry.Plot(name)
+
+def addaxis_handler(bot, update, args=None):
+    if args and len(args) >= 2:
+        name = get_graph_name(bot, update, args)
+
+        if name is None:
+            bot.send_message(chat_id=update.message.chat_id,
+                             text="Error: graph '{}' was not found!".format(name))
+        else:
+            label = args[1:]
+
+            plots[name].add_axis(label)
+            bot.send_message(chat_id=update.message.chat_id,
+                             text="Successfully added axis!")
+    else:
+        bot.send_message(chat_id=update.message.chat_id,
+                         text="Error: syntax is /addaxis [GRAPH NAME] [AXIS LABEL]")
+
+def listaxes_handler(bot, update, args=None):
+    name = get_graph_name(bot, update, args)
+    if name is None:
+        if args:
+            bot.send_message(chat_id=update.message.chat_id,
+                text="Error: graph '{}' was not found!".format(args[0]))
+        else:
+            bot.send_message(chat_id=update.message.chat_id,
+                text="Error: syntax is /listaxes [GRAPH NAME]")
+    else:
+        bot.send_message(chat_id=update.message.chat_id,
+            text="Current axes: " + ", ".join(plots[name].get_axes()) )
+
+def display_handler(bot, update, args=None):
+    name = get_graph_name(bot, update, args)
+    if name is None:
+        if args:
+            bot.send_message(chat_id=update.message.chat_id,
+                text="Error: graph '{}' was not found!".format(args[0]))
+        else:
+            bot.send_message(chat_id=update.message.chat_id,
+                text="Error: syntax is /lookatthisgraph [GRAPH NAME]")
+    else:
+        image = plots[name].generate_image()
+        # TODO spooky image-sending things
+        bot.send_message(chat_id=update.message.chat_id,
+            text="TODO: the only useful part of this bot has not been implemented")
+
+def is_numeric(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
 #   /tag name coords  [point label]
+def tag_handler(bot, update, args=None):
+    if args and len(args) >= 2:
+        name = get_graph_name(bot, update, args)
+
+        if name is None:
+            bot.send_message(chat_id=update.message.chat_id,
+                             text="Error: graph '{}' was not found!".format(name))
+        else:
+            plot = plots[name]
+
+            coords_and_label = " ".join(args[1:]).replace("(","").replace(")","").replace(","," ")
+            items = coords_and_label.split()
+            if len(items) < plot.dim:
+                bot.send_message(chat_id=update.message.chat_id,
+                text="Error: insufficent coordinates for {}-dimensional graph".format(plot.dim))
+                return
+            elif len(items) == plot.dim:
+                coords_strs = items
+                label = update.message.from_user.first_name[0] + update.message.from_user.last_name[0]
+                    # user initials
+            else: # len(items) > plot.dim
+                coords_strs = items[:plot.dim]
+                label = " ".join(items[plot.dim:])
+
+            if not all( [is_numeric(s) for s in coords_strs]):
+                bot.send_message(chat_id=update.message.chat_id,
+                    text="Error: all coordinates must be numbers")
+            else:
+                point = geometry.Point(label, plot.dim)
+                point.set_data_arr([ float(s) for s in coords_strs ])
+
+    else:
+        bot.send_message(chat_id=update.message.chat_id,
+                         text="Error: syntax is /tag [GRAPH NAME] [COORDINATE] [COORDINATE] ... [optional label]")
+
+
+dispatcher.add_handler(CommandHandler('newgraph', newgraph_handler, pass_args=True))
+dispatcher.add_handler(CommandHandler('addaxis', newgraph_handler, pass_args=True))
+dispatcher.add_handler(CommandHandler('listaxes', listaxes_handler, pass_args=True))
+dispatcher.add_handler(CommandHandler('lookatthisgraph', display_handler, pass_args=True))
+dispatcher.add_handler(CommandHandler('tag', tag_handler, pass_args=True))
+
 
 # Credit: https://github.com/CaKEandLies/Telegram_Cthulhu/blob/master/cthulhu_game_bot.py#L63
 def feedback_handler(bot, update, args=None):
