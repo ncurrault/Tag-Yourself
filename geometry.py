@@ -1,4 +1,6 @@
 from __future__ import unicode_literals
+import matplotlib
+matplotlib.use('Agg') # block GUI
 import matplotlib.pyplot as plt
 
 class DimensionMismatchException(Exception):
