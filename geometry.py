@@ -43,12 +43,17 @@ class Point(object):
         return self.data[i]
 
 class Plot(object):
+    X_BOUNDS = [ -1.2, 1.2 ]
+    Y_BOUNDS = X_BOUNDS # square
+
     def __init__(self, _title):
         self.title = _title
 
         self.dim = 0
         self.axes = []
         self.points = []
+
+        self.image_dirty = True # image must be generated
     def __str__(self):
         ret = self.title
         ret += "\n"
@@ -71,6 +76,7 @@ class Plot(object):
         for p in self.points:
             p.set_dim(self.dim)
         self.axes.append(axis_name)
+        self.image_dirty = True # image is no longer accurate
 
         assert len(self.axes) == self.dim
 
@@ -80,27 +86,49 @@ class Plot(object):
     def add_point(self, p):
         if self.dim == p.dim:
             self.points.append(p)
+            self.image_dirty = True # image is no longer accurate
         else:
             raise DimensionMismatchException()
 
     def generate_image(self):
-        # TODO: the hard part
-        # This function currently just returns a string representing everything
-        return str(self)
+        if not self.image_dirty:
+            return # no new work necessary
 
-# /lookatthisgraph _name_
-# Display a graph
-# *Example message*:
-# ```
-# /lookatthisgraph Healing
-# ```
-#
-# /tag _name_ _coordinates_ [ _point label_ ]
-# Add a point to a graph. Use caller's Telegram name initials if no provided label.
-# All axes in all graphs are on the scale \[-1, 1]
-#
-# *Example message*:
-# ```
-# /tag Healing (-1, -1) bad
-# /tag Healing (1, 1) good
-# ```
+        if self.dim != 2:
+            return "Only two-dimensional graphs are supported"
+            # TODO support 1 and 3 dimensions
+
+        plt.clf() # clears matplotlib canvas
+        fig = plt.figure()
+
+        # formatting
+        plt.rc('xtick',labelsize = 13)
+        plt.rc('ytick',labelsize = 13)
+        plt.rc('axes', linewidth = 2)
+
+        # set bounds and draw axes
+        axes = plt.gca()
+        axes.set_xlim(Plot.X_BOUNDS)
+        axes.set_ylim(Plot.Y_BOUNDS)
+        plt.plot(Plot.X_BOUNDS, [0, 0], 'k', linewidth=1) # x-axis
+        plt.plot([0, 0], Plot.Y_BOUNDS, 'k', linewidth=1) # y-axis
+
+        # text
+        plt.title(self.title, fontsize=24)
+        plt.xlabel(self.get_axes()[0], fontsize = 18)
+        plt.ylabel(self.get_axes()[1], fontsize = 18)
+
+        # points
+        xvals = [ pt.get_data(0) for pt in self.points ]
+        yvals = [ pt.get_data(1) for pt in self.points ]
+        labels = [ pt.label for pt in self.points ]
+        plt.scatter(xvals, yvals)
+
+        LABEL_OFFSET_X = 0.02
+        LABEL_OFFSET_Y = LABEL_OFFSET_X
+        for i in range(len(self.points)):
+            plt.annotate(labels[i], (xvals[i] + LABEL_OFFSET_X, yvals[i] + LABEL_OFFSET_Y) )
+
+        fig.savefig("ignore/images/{}.png".format(self.title))
+        plt.close(fig)
+        self.image_dirty = False

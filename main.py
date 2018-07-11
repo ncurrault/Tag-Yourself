@@ -85,10 +85,14 @@ def display_handler(bot, update, args=None):
             bot.send_message(chat_id=update.message.chat_id,
                 text="Error: syntax is /lookatthisgraph [GRAPH NAME]")
     else:
-        image = plots[name].generate_image()
-        # TODO spooky image-sending things
-        bot.send_message(chat_id=update.message.chat_id,
-            text=image)
+        reply = plots[name].generate_image()
+        if reply is None: # indicates success
+            image_path = "ignore/images/{}.png".format(plots[name].title)
+            image_path = image_path.encode('ascii') # odd ASCII/Unicode glitch with filenames
+            bot.send_photo(chat_id=update.message.chat_id,
+                photo=open(image_path, 'rb'))
+        else:
+            bot.send_message(chat_id=update.message.chat_id, text=reply)
 
 def is_numeric(s):
     try:
